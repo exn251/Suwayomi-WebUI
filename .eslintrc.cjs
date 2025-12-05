@@ -21,24 +21,6 @@ module.exports = {
 
                 'import/prefer-default-export': 'off',
                 'import/no-default-export': 'error',
-
-                'header/header': [
-                    'error',
-                    'block', // comment type
-                    [
-                        // expected file header comment
-                        // the spaces are important, otherwise, the rule will mark it as an error
-                        '',
-                        ' * Copyright (C) Contributors to the Suwayomi project',
-                        ' *',
-                        ' * This Source Code Form is subject to the terms of the Mozilla Public',
-                        ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
-                        ' * file, You can obtain one at https://mozilla.org/MPL/2.0/.',
-                        ' ',
-                    ],
-                    2, // number of new lines after comment
-                ],
-
                 'prettier/prettier': 'error',
 
                 'class-methods-use-this': 'off',

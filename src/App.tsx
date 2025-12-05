@@ -33,6 +33,10 @@ import { ReactRouter } from '@/lib/react-router/ReactRouter.ts';
 import { AuthManager } from '@/features/authentication/AuthManager.ts';
 import { ImageProcessingType } from '@/features/settings/Settings.types.ts';
 
+// Mangatan OCR Desktop Script Initialization
+import { OCRProvider } from '@/Mangatan/context/OCRContext';
+import { OCRManager } from '@/Mangatan/OCRManager.tsx';
+
 const { Browse } = loadable(() => import('@/features/browse/screens/Browse.tsx'), lazyLoadFallback);
 const { DownloadQueue } = loadable(() => import('@/features/downloads/screens/DownloadQueue.tsx'), lazyLoadFallback);
 const { Library } = loadable(() => import('@/features/library/screens/Library.tsx'), lazyLoadFallback);
@@ -329,16 +333,19 @@ export const App: React.FC = () => (
             <ReactRouterSetter />
 
             <CssBaseline enableColorScheme />
+            <OCRProvider>
+                <OCRManager />
 
-            <Box sx={{ display: 'flex' }}>
-                <Box sx={{ flexShrink: 0, position: 'relative', height: '100vh' }}>
-                    <DefaultNavBar />
+                <Box sx={{ display: 'flex' }}>
+                    <Box sx={{ flexShrink: 0, position: 'relative', height: '100vh' }}>
+                        <DefaultNavBar />
+                    </Box>
+                    <Routes>
+                        <Route path={AppRoutes.matchAll.match} element={<MainApp />} />
+                        <Route path={AppRoutes.reader.match} element={<ReaderApp />} />
+                    </Routes>
                 </Box>
-                <Routes>
-                    <Route path={AppRoutes.matchAll.match} element={<MainApp />} />
-                    <Route path={AppRoutes.reader.match} element={<ReaderApp />} />
-                </Routes>
-            </Box>
+            </OCRProvider>
         </AuthGuard>
     </AppContext>
 );
