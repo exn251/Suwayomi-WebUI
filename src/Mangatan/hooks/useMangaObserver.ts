@@ -26,12 +26,28 @@ export const useMangaObserver = () => {
             }
 
             const unique = Array.from(new Set(found)).filter((img) => {
-                if (!img.isConnected || img.naturalHeight <= 200) return false;
-                
-                if (img.src.includes('thumbnail')) return false;
+				if (!img.isConnected || img.src.includes('thumbnail')) return false;
+				if (img.naturalHeight <= 200) return false;
 
-                return true;
-            });
+				// 2. SUWAYOMI SPECIFIC: Display Check
+				// In Suwayomi's paged reader, inactive pages are often set to 'display: none'.
+				// offsetParent is null if the element or any parent is hidden.
+				const isDisplayed = img.offsetParent !== null;
+				if (!isDisplayed) return false;
+
+				// 3. VIEWPORT CHECK (Optional but recommended)
+				// If Suwayomi uses a "Webtoon" or "Continuous" scroll mode, 
+				// we only want OCR for what is actually on the screen.
+				const rect = img.getBoundingClientRect();
+				const isInViewport = (
+					rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+					rect.bottom > 0
+				);
+				
+				// If it's paged mode, isDisplayed is usually enough. 
+				// If it's webtoon mode, you need isInViewport.
+				return isDisplayed && isInViewport;
+			});
 
             setImages((prev) => {
                 if (prev.length === unique.length && prev.every((img, i) => img.src === unique[i].src)) return prev;
@@ -42,13 +58,31 @@ export const useMangaObserver = () => {
         scan();
 
         const observer = new MutationObserver((mutations) => {
-            if (mutations.some((m) => m.addedNodes.length > 0 || m.attributeName === 'src')) scan();
-        });
+			const shouldRescan = mutations.some((m) => 
+				m.addedNodes.length > 0 || 
+				m.attributeName === 'src' || 
+				m.attributeName === 'class' || // Suwayomi toggles classes for active pages
+				m.attributeName === 'style'    // Suwayomi toggles display styles
+			);
+			if (shouldRescan) scan();
+		});
 
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+		observer.observe(document.body, { 
+			childList: true, 
+			subtree: true, 
+			attributes: true, 
+			// Important: watch these attributes
+			attributeFilter: ['src', 'class', 'style'] 
+		});
 
-        return () => observer.disconnect();
-    }, [settings.site, settings.debugMode]);
+		// Also: Add a scroll listener if you use Webtoon/Vertical mode
+		window.addEventListener('scroll', scan, { passive: true });
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('scroll', scan);
+		};
+	}, [settings.site, settings.debugMode]);
 
     return images;
 };
